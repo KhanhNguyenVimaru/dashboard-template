@@ -13,7 +13,6 @@ class IotDeviceController extends Controller
      */
     public function index()
     {
-        //
     }
 
     /**

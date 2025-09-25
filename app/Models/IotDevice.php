@@ -11,7 +11,28 @@ class IotDevice extends Model
 {
     /** @use HasFactory<\Database\Factories\IotDeviceFactory> */
     use HasFactory;
-    
+
+    #hàm này để chỉ định các trường có thể gán hàng loạt (mass assignable)
+    protected $fillable = [
+        'device_name',
+        'device_type',
+        'serial_number',
+        'ip_address',
+        'port',
+        'mac_address',
+        'manufacturer',
+        'model',
+        'config',
+        'is_active',
+        'coverage',
+        'protocol',
+        'firmware_version',
+        'last_seen',
+        'battery_level',
+        'rssi',
+        'environment_id', // Thêm trường environment_id vào fillable
+        'position_id',    // Thêm trường position_id vào fillable
+    ];
     /**
      * Lấy môi trường chứa thiết bị IoT này
      */
@@ -19,7 +40,7 @@ class IotDevice extends Model
     {
         return $this->belongsTo(Environment::class);
     }
-    
+
     /**
      * Lấy vị trí của thiết bị IoT này
      */

@@ -1,3 +1,5 @@
+# Loại trừ thư mục .github
+.github/
 *.log
 .DS_Store
 .env
