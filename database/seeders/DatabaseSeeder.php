@@ -13,11 +13,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
+        // Tạo user mặc định
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
+        ]);
+
+        // Gọi các seeder khác theo thứ tự phù hợp
+        $this->call([
+            RouterSeeder::class,
+            IotDeviceSeeder::class,
         ]);
     }
 }

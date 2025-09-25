@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\IotDevice;
 
 class IotDeviceSeeder extends Seeder
 {
@@ -12,6 +13,6 @@ class IotDeviceSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        IotDevice::factory()->count(20)->create();
     }
 }
