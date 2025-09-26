@@ -13,6 +13,8 @@ class IotDeviceController extends Controller
      */
     public function index()
     {
+        $all_devices = IotDevice::all();
+        return response()->json($all_devices);
     }
 
     /**
