@@ -5,15 +5,28 @@ namespace App\Http\Controllers;
 use App\Models\router;
 use App\Http\Requests\StorerouterRequest;
 use App\Http\Requests\UpdaterouterRequest;
+use Illuminate\Http\Request;
 
 class RouterController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request )
     {
-        //
+        $perPage = $request->integer('per_page', 5);
+
+        if ($request->has('search')) {
+            $keyword = $request->query('search');
+            return router::search($keyword)->paginate($perPage);
+        }
+
+        if($request->has('mac_address')){
+            return router::where('mac_address', $request->query('mac_address'))->firstOrFail();
+
+        }
+
+        return router::paginate($perPage);
     }
 
     /**

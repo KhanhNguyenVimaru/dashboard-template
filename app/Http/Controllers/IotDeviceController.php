@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers;
 
@@ -15,10 +15,17 @@ class IotDeviceController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->integer('per_page', 5);
+
         if ($request->has('search')) {
             $keyword = $request->query('search');
             return IotDevice::search($keyword)->paginate($perPage);
         }
+
+        if($request->has('serial_number')){
+            return IotDevice::where('serial_number', $request->query('serial_number'))->firstOrFail();
+
+        }
+
         return IotDevice::paginate($perPage);
     }
 
