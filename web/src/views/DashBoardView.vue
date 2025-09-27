@@ -1,17 +1,21 @@
-<template>
+﻿<template>
   <AppHeader />
   <div class="flex flex-col gap-4 p-4">
-    <!-- Tầng 1: danh sách IoT Devices và Router -->
-    <div class="flex gap-5 h-[40vh]">
-      <div class="flex-1 bg-gray-100">
+    <div class="flex gap-5">
+      <div class="flex-1">
         <DataBox
           :data="iotDeviceData"
           :columns="iotDeviceColumns"
+          :pagination="iotPagination"
+          :loading="iotLoading"
           title="IoT Devices"
           @add-click="showAddModal(false)"
+          @change:page="loadAIoTData"
+          @change:perPage="handleIotPerPageChange"
+          @change:search="handleIotSearch"
         />
       </div>
-      <div class="flex-1 bg-gray-100">
+      <div class="flex-1">
         <DataBox
           :data="routerData"
           :columns="routerColumns"
@@ -21,30 +25,25 @@
       </div>
     </div>
 
-    <!-- Tầng 2: kéo thả -->
-    <div class="h-screen bg-gray-100 flex items-center justify-center">
-      Kéo thả thiết bị mô phỏng
+    <div class="h-screen bg-gray-100 flex items-center justify-center text-sm text-gray-500">
+      Network devices area
     </div>
 
-    <!-- Modal IoT Device -->
     <transition name="slide-down">
       <NewIoTDevicesModal
         v-if="showModal && !isAddingRouter"
         :show="showModal"
         :title="modalTitle"
         @close="showModal = false"
-        @submit="handleAddDevice"
       />
     </transition>
 
-    <!-- Modal Router -->
     <transition name="slide-down">
       <NewRouterModal
         v-if="showModal && isAddingRouter"
         :show="showModal"
         :title="modalTitle"
         @close="showModal = false"
-        @submit="handleAddDevice"
       />
     </transition>
   </div>
@@ -53,58 +52,129 @@
 <script setup lang="ts">
 import AppHeader from "../components/AppHeader.vue"
 import DataBox from "../components/DataBox.vue"
-import NewIoTDevicesModal from "../components/NewIoTDevicesModal.vue"
-import NewRouterModal from "../components/NewRouterModal.vue"
-import { ref, computed } from "vue"
+import NewIoTDevicesModal from "../components/Modal/IoTDevicesModal.vue"
+import NewRouterModal from "../components/Modal/RouterModal.vue"
+import { ref, computed, onMounted } from "vue"
+import axios from "axios"
 
-// IoT device data (khởi đầu rỗng)
-const iotDeviceData = ref<any[]>([])
+interface IoTDevice {
+  name: string
+  serial_number: string
+  device_name: string
+  device_type: string
+  coverage: number
+  last_seen: string
+  battery_level: number
+  rssi: number
+}
+
+interface RouterDevice {
+  mac_address: string
+  name: string
+  ip_address: string
+  status: string
+  coverage: number
+  deviceId: string
+}
+
+const iotDeviceData = ref<IoTDevice[]>([])
 const iotDeviceColumns = ref([
   "name",
-  "status",
-  "ip_address",
-  "location",
-  "deviceId",
+  "serial_number",
+  "device_type",
+  "coverage",
+  "last_seen",
+  "battery_level",
+  "rssi"
 ])
 
-// Router data (khởi đầu rỗng)
-const routerData = ref<any[]>([])
+const routerData = ref<RouterDevice[]>([])
 const routerColumns = ref([
+  "mac_address",
   "name",
-  "status",
   "ip_address",
-  "location",
-  "deviceId",
+  "port",
+  "status",
+  "coverage",
+  "location"
 ])
 
-// Modal state
 const showModal = ref(false)
 const isAddingRouter = ref(false)
 
-// Modal title
+const iotPagination = ref({
+  page: 1,
+  perPage: 5,
+  lastPage: 1,
+  total: 0,
+})
+const iotLoading = ref(false)
+
 const modalTitle = computed(() =>
   isAddingRouter.value ? "Add Router Device" : "Add IoT Device"
 )
 
-// Show modal
 const showAddModal = (isRouter: boolean) => {
   isAddingRouter.value = isRouter
   showModal.value = true
 }
 
-// Add new device
-const handleAddDevice = (deviceData: any) => {
-  if (isAddingRouter.value) {
-    routerData.value.push({
-      ...deviceData,
-      deviceId: `R${routerData.value.length + 1}`,
+const searchTerm = ref("")
+
+const loadAIoTData = async (
+  page = 1,
+  perPage = iotPagination.value.perPage,
+  search = searchTerm.value,
+) => {
+  try {
+    const params: Record<string, any> = {
+      page,
+      per_page: perPage,
+    }
+
+    if (search && search.trim() !== "") {
+      params.search = search
+    }
+    iotLoading.value = true
+    const { data: payload } = await axios.get("http://localhost:8000/api/iot-devices", {
+      params
     })
-  } else {
-    iotDeviceData.value.push({
-      ...deviceData,
-      deviceId: `I${iotDeviceData.value.length + 1}`,
-    })
+
+    const devices = Array.isArray(payload.data) ? payload.data : []
+    iotDeviceData.value = devices.map((item: IoTDevice) => ({
+      name: item.device_name ?? item.name,
+      serial_number: item.serial_number,
+      device_type: item.device_type,
+      coverage: item.coverage,
+      last_seen: item.last_seen,
+      battery_level: item.battery_level,
+      rssi: item.rssi,
+    }))
+
+    iotPagination.value = {
+      page: payload.current_page ?? page,
+      perPage: payload.per_page ?? perPage,
+      lastPage: payload.last_page ?? 1,
+      total: payload.total ?? devices.length,
+    }
+  } catch (error) {
+    console.error("Error loading data:", error)
+  } finally {
+    iotLoading.value = false
   }
-  showModal.value = false
 }
+
+const handleIotSearch = (value: string) => {
+  searchTerm.value = value
+  loadAIoTData(1, iotPagination.value.perPage, searchTerm.value)
+}
+
+const handleIotPerPageChange = (value: number) => {
+  iotPagination.value.perPage = value
+  loadAIoTData(1, value, searchTerm.value)
+}
+
+onMounted(() => {
+  loadAIoTData()
+})
 </script>

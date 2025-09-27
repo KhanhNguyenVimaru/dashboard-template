@@ -5,16 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\IotDevice;
 use App\Http\Requests\StoreIotDeviceRequest;
 use App\Http\Requests\UpdateIotDeviceRequest;
+use Illuminate\Http\Request;
 
 class IotDeviceController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $all_devices = IotDevice::all();
-        return response()->json($all_devices);
+        $perPage = $request->integer('per_page', 5);
+        if ($request->has('search')) {
+            $keyword = $request->query('search');
+            return IotDevice::search($keyword)->paginate($perPage);
+        }
+        return IotDevice::paginate($perPage);
     }
 
     /**

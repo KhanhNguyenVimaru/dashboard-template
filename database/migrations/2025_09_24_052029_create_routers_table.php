@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('mac_address', 17);
             $table->string('name');
+            $table->unsignedSmallInteger('port')->nullable();
             $table->string('ip_address')->unique();
             $table->string('location')->nullable();
             $table->string('model')->nullable();

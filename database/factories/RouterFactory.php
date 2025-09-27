@@ -20,6 +20,7 @@ class RouterFactory extends Factory
             'mac_address'      => $this->faker->macAddress(),
             'name'             => $this->faker->domainWord() . '-router',
             'ip_address'       => $this->faker->unique()->ipv4(),
+            'port'             => $this->faker->optional()->numberBetween(1024, 65535),
             'location'         => $this->faker->optional()->city(),
             'model'            => $this->faker->optional()->bothify('R-###??'),
             'manufacturer'     => $this->faker->optional()->company(),

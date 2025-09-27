@@ -2,38 +2,6 @@
   <div
     class="bg-white shadow-sm rounded border border-gray-200 overflow-hidden transition-all duration-200 hover:shadow-sm relative w-full text-xs"
   >
-    <!-- Loading Overlay -->
-    <div
-      v-if="loading"
-      class="absolute inset-0 bg-white bg-opacity-70 z-10 flex items-center justify-center"
-    >
-      <div class="flex flex-col items-center">
-        <svg
-          class="animate-spin h-6 w-6 text-blue-500 mb-1"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            class="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            stroke-width="4"
-          ></circle>
-          <path
-            class="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2
-               5.291A7.962 7.962 0 014 12H0c0
-               3.042 1.135 5.824 3 7.938l3-2.647z"
-          ></path>
-        </svg>
-        <span class="text-gray-600 text-xs">Đang tải...</span>
-      </div>
-    </div>
-
     <!-- Header Section -->
     <div class="bg-gray-50 px-2 py-1 border-b border-gray-200">
       <div class="flex justify-between items-center gap-3">
@@ -48,8 +16,9 @@
             <input
               v-model="filterKeyword"
               type="text"
-              placeholder="Tìm kiếm..."
+              placeholder="Search..."
               class="pl-5 pr-1 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400 bg-white w-52 text-xs cursor-text"
+              @change="(e: Event) => emit('change:search', (e.target as HTMLInputElement).value.trim())"
             />
             <svg
               class="absolute left-1 top-1.5 h-3 w-3 text-gray-400"
@@ -82,8 +51,9 @@
                      0H6"
                 />
               </svg>
-              Thêm
+              New Devices
             </button>
+
             <button
               @click.stop="resetTable"
               class="inline-flex items-center bg-gray-500 hover:bg-gray-600 text-white rounded px-3 py-0.5 text-xs"
@@ -101,8 +71,9 @@
                      2H15"
                 />
               </svg>
-              Tải lại
+              Reload
             </button>
+
             <button
               @click.stop
               class="inline-flex items-center bg-gray-500 hover:bg-gray-600 text-white rounded px-3 py-0.5 text-xs"
@@ -132,7 +103,7 @@
                      48.32 0 0 1 12 3Z"
                 />
               </svg>
-              Bộ lọc
+              Filter
             </button>
           </div>
         </div>
@@ -153,8 +124,43 @@
             </th>
           </tr>
         </thead>
+
         <tbody class="divide-y divide-gray-100">
+          <!-- Loading row -->
+          <tr v-if="loading">
+            <td :colspan="columns.length" class="p-4 text-center">
+              <div class="flex flex-col items-center">
+                <svg
+                  class="animate-spin h-6 w-6 text-blue-500 mb-1"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0
+                       0 5.373 0 12h4zm2
+                       5.291A7.962 7.962 0 014 12H0c0
+                       3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                <span class="text-gray-600 text-xs">Loading...</span>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Data rows -->
           <tr
+            v-else
             v-for="(row, idx) in filteredData"
             :key="idx"
             class="hover:bg-gray-50 transition-colors duration-150"
@@ -173,7 +179,7 @@
       </table>
 
       <!-- Empty State -->
-      <div v-if="filteredData.length === 0" class="text-center py-2 ">
+      <div v-if="!loading && filteredData.length === 0" class="text-center py-8">
         <svg
           class="mx-auto h-4 w-4 text-gray-300"
           fill="none"
@@ -193,9 +199,9 @@
                2 0 01-2 2z"
           />
         </svg>
-        <h3 class="mt-1 font-medium text-gray-600 text-xs">Không có dữ liệu</h3>
+        <h3 class="mt-1 font-medium text-gray-600 text-xs">No data available</h3>
         <p class="mt-0.5 text-gray-400 text-xs">
-          {{ filterKeyword ? 'Không tìm thấy kết quả phù hợp' : 'Chưa có dữ liệu để hiển thị' }}
+          {{ filterKeyword ? 'No matching results found' : 'No data available' }}
         </p>
       </div>
     </div>
@@ -241,7 +247,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import type { PropType } from 'vue'
 
 interface Row {
@@ -256,59 +262,43 @@ interface Pagination {
 }
 
 const props = defineProps({
-  title: {
-    type: String,
-    default: '',
-  },
-  data: {
-    type: Array as PropType<Row[]>,
-    default: () => [],
-  },
-  columns: {
-    type: Array as PropType<string[]>,
-    default: () => [],
-  },
-  isMain: {
-    type: Boolean,
-    default: false,
-  },
-  pagination: {
-    type: Object as PropType<Pagination | null>,
-    default: null,
-  },
-  loading: {
-    type: Boolean,
-    default: false,
-  },
+  title: { type: String, default: '' },
+  data: { type: Array as PropType<Row[]>, default: () => [] },
+  columns: { type: Array as PropType<string[]>, default: () => [] },
+  isMain: { type: Boolean, default: false },
+  pagination: { type: Object as PropType<Pagination | null>, default: null },
+  loading: { type: Boolean, default: false },
 })
 
 const emit = defineEmits<{
   (e: 'update:data', value: Row[]): void
   (e: 'change:page', value: number): void
   (e: 'change:perPage', value: number): void
+  (e: 'change:search', value: string): void
   (e: 'add-click'): void
 }>()
 
 const filterKeyword = ref('')
+let debounceId: ReturnType<typeof setTimeout> | undefined
 
-const filteredData = computed(() => {
-  if (!filterKeyword.value) return props.data
-  return props.data.filter((row) =>
-    Object.values(row).some((val) =>
-      String(val ?? '')
-        .toLowerCase()
-        .includes(filterKeyword.value.toLowerCase()),
-    ),
-  )
+watch(filterKeyword, (value) => {
+  if (debounceId) clearTimeout(debounceId)
+  debounceId = setTimeout(() => emit('change:search', value.trim()), 300)
 })
+
+onBeforeUnmount(() => {
+  if (debounceId) clearTimeout(debounceId)
+})
+
+const filteredData = computed(() => props.data)
 
 const resetTable = () => {
   filterKeyword.value = ''
+  emit('change:search', '')
 }
 </script>
 
 <style scoped>
-
 button,
 select,
 tr {
