@@ -31,21 +31,25 @@
     </div>
 
     <!-- IoT Modal -->
-    <NewIoTDevicesModal
-      v-if="showModal && !isAddingRouter"
-      :show="showModal"
-      :mode="isUpdate ? 'update' : 'add'"
-      :initialData="selectedDevice"
-      @close="showModal = false"
-    />
+    <transition name="slide-down">
+      <NewIoTDevicesModal
+        v-if="showModal && !isAddingRouter"
+        :show="showModal"
+        :mode="isUpdate ? 'update' : 'add'"
+        :initialData="selectedDevice"
+        @close="showModal = false"
+      />
+    </transition>
 
     <!-- Router Modal -->
-    <NewRouterModal
-      v-if="showModal && isAddingRouter"
-      :show="showModal"
-      :title="modalTitle"
-      @close="showModal = false"
-    />
+    <transition name="slide-down">
+      <NewRouterModal
+        v-if="showModal && isAddingRouter"
+        :show="showModal"
+        :title="modalTitle"
+        @close="showModal = false"
+      />
+    </transition>
   </div>
 </template>
 
@@ -167,7 +171,7 @@ const isUpdate = ref(false)
 const loadDetailIoTData = async (device: IoTDevice) => {
   try {
     const { data } = await axios.get(`http://localhost:8000/api/iot-devices`, {
-      params: { serial_number: device.serial_number }
+      params: { serial_number: device.serial_number },
     })
     selectedDevice.value = data
     isUpdate.value = true

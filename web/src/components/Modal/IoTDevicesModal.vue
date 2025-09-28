@@ -185,17 +185,10 @@
             <!-- Actions -->
             <div class="mt-6 flex justify-end space-x-3">
               <button
-                type="button"
-                @click="closeModal"
-                class="px-3 py-1 border border-gray-300 rounded-lg text-xs font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
                 v-if="mode === 'update'"
                 type="button"
                 @click="handleDelete"
-                class="px-3 py-1 bg-red-600 text-white rounded-lg text-xs font-medium hover:bg-red-700"
+                class="px-3 py-1 border border-gray-300 rounded-lg text-xs font-medium text-gray-700 bg-white hover:border-red-600 hover:text-white hover:bg-red-600"
               >
                 Delete
               </button>
@@ -349,5 +342,8 @@ onMounted(() => {
 .scale-leave-from {
   opacity: 1;
   transform: scale(1);
+}
+button{
+  cursor: pointer;
 }
 </style>
