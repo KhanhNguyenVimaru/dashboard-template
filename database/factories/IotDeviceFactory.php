@@ -10,37 +10,31 @@ use Illuminate\Support\Str;
  */
 class IotDeviceFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
-        $device_types = ['sensor', 'plc', 'cnc', 'rfid', 'robot', 'hmi', 'other'];
-        $protocols = ['mqtt', 'http', 'modbus', 'coap', 'tcp', 'udp', 'other'];
-
-        return [
-            'device_name'      => $this->faker->words(2, true),
-            'device_type'      => $this->faker->randomElement($device_types),
-            'serial_number'    => strtoupper(Str::random(10)),
+        $data = [
+            'device_name'      => $this->faker->unique()->words(2, true),
+            'device_type'      => $this->faker->randomElement(['sensor', 'plc', 'cnc', 'rfid', 'robot', 'hmi', 'other']),
+            'serial_number'    => strtoupper(Str::random(12)),
             'ip_address'       => $this->faker->optional()->ipv4(),
             'port'             => $this->faker->optional()->numberBetween(1024, 65535),
             'mac_address'      => $this->faker->optional()->macAddress(),
             'manufacturer'     => $this->faker->optional()->company(),
             'model'            => $this->faker->optional()->bothify('Model-###??'),
             'config'           => $this->faker->optional()->randomElement([
+                json_encode(['threshold' => $this->faker->numberBetween(1, 100)]),
                 json_encode(['username' => 'admin', 'password' => 'secret']),
-                json_encode(['threshold' => rand(1, 100)]),
-                null
             ]),
-            'is_active'        => $this->faker->boolean(90),
-            'coverage'         => $this->faker->randomFloat(3, 0, 500.000),
-            'protocol'         => $this->faker->randomElement($protocols),
-            'firmware_version' => $this->faker->optional()->semver(),
-            'last_seen'        => $this->faker->optional()->dateTimeBetween('-1 month', 'now'),
+            'is_active'        => $this->faker->boolean(85),
+            'coverage'         => $this->faker->randomFloat(3, 0, 500),
+            'protocol'         => $this->faker->randomElement(['mqtt', 'http', 'modbus', 'coap', 'tcp', 'udp', 'other']),
+            'firmware_version' => $this->faker->optional()->numerify('v#.#.#'),
+            'last_seen'        => $this->faker->optional()->dateTimeBetween('-30 days', 'now'),
             'battery_level'    => $this->faker->optional()->numberBetween(0, 100),
             'rssi'             => $this->faker->optional()->numberBetween(-120, -30),
         ];
+
+        // loại bỏ các field null
+        return array_filter($data, fn ($value) => !is_null($value));
     }
 }

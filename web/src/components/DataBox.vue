@@ -128,7 +128,7 @@
         <tbody class="divide-y divide-gray-100">
           <!-- Loading row -->
           <tr v-if="loading">
-            <td :colspan="columns.length" class="p-4 text-center">
+            <td :colspan="columns.length" class="p-6 text-center">
               <div class="flex flex-col items-center">
                 <svg
                   class="animate-spin h-6 w-6 text-blue-500 mb-1"
@@ -164,6 +164,7 @@
             v-for="(row, idx) in filteredData"
             :key="idx"
             class="hover:bg-gray-50 transition-colors duration-150"
+            @click="emit('detail-click', row as any)"
           >
             <td
               v-for="col in columns"
@@ -215,8 +216,7 @@
         {{ pagination.page }}/{{ pagination.lastPage }} · {{ pagination.total }} items
       </div>
       <div class="flex items-center gap-1">
-        <select
-          class="border border-gray-300 rounded py-0.5 px-0.5 bg-white text-xs"
+        <select          class="border border-gray-300 rounded py-0.5 px-0.5 bg-white text-xs"
           :value="pagination.perPage"
           @change="
             (e: Event) => emit('change:perPage', Number((e.target as HTMLSelectElement).value))
@@ -276,6 +276,7 @@ const emit = defineEmits<{
   (e: 'change:perPage', value: number): void
   (e: 'change:search', value: string): void
   (e: 'add-click'): void
+  (e: 'detail-click', value: string): void
 }>()
 
 const filterKeyword = ref('')
@@ -318,4 +319,18 @@ tr {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+tr {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+tr:active {
+  background-color: #e0f2fe; /* bg-sky-100 */
+}
+
+tr:focus {
+  outline: none;
+  background-color: #dbeafe; /* bg-blue-100 */
+}
+
 </style>

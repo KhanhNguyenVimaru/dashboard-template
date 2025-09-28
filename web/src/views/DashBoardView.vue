@@ -9,10 +9,11 @@
           :pagination="iotPagination"
           :loading="iotLoading"
           title="IoT Devices"
-          @add-click="showAddModal(false)"
+          @add-click="openAddModal"
           @change:page="loadAIoTData"
           @change:perPage="handleIotPerPageChange"
           @change:search="handleIotSearch"
+          @detail-click="(item) => loadDetailIoTData(item as any)"
         />
       </div>
       <div class="flex-1">
@@ -29,43 +30,50 @@
       Network devices area
     </div>
 
-    <transition name="slide-down">
-      <NewIoTDevicesModal
-        v-if="showModal && !isAddingRouter"
-        :show="showModal"
-        :title="modalTitle"
-        @close="showModal = false"
-      />
-    </transition>
+    <!-- IoT Modal -->
+    <NewIoTDevicesModal
+      v-if="showModal && !isAddingRouter"
+      :show="showModal"
+      :mode="isUpdate ? 'update' : 'add'"
+      :initialData="selectedDevice"
+      @close="showModal = false"
+    />
 
-    <transition name="slide-down">
-      <NewRouterModal
-        v-if="showModal && isAddingRouter"
-        :show="showModal"
-        :title="modalTitle"
-        @close="showModal = false"
-      />
-    </transition>
+    <!-- Router Modal -->
+    <NewRouterModal
+      v-if="showModal && isAddingRouter"
+      :show="showModal"
+      :title="modalTitle"
+      @close="showModal = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import AppHeader from "../components/AppHeader.vue"
-import DataBox from "../components/DataBox.vue"
-import NewIoTDevicesModal from "../components/Modal/IoTDevicesModal.vue"
-import NewRouterModal from "../components/Modal/RouterModal.vue"
-import { ref, computed, onMounted } from "vue"
-import axios from "axios"
+import AppHeader from '../components/AppHeader.vue'
+import DataBox from '../components/DataBox.vue'
+import NewIoTDevicesModal from '../components/Modal/IoTDevicesModal.vue'
+import NewRouterModal from '../components/Modal/RouterModal.vue'
+import { ref, computed, onMounted } from 'vue'
+import axios from 'axios'
 
 interface IoTDevice {
-  name: string
-  serial_number: string
+  id: number
   device_name: string
   device_type: string
-  coverage: number
-  last_seen: string
-  battery_level: number
-  rssi: number
+  serial_number: string
+  ip_address?: string | null
+  port?: number | null
+  mac_address?: string | null
+  model?: string | null
+  config?: string | null
+  is_active: boolean
+  coverage?: string | null
+  protocol?: string
+  firmware_version?: string | null
+  last_seen?: string | null
+  battery_level?: number | null
+  rssi?: number | null
 }
 
 interface RouterDevice {
@@ -79,24 +87,24 @@ interface RouterDevice {
 
 const iotDeviceData = ref<IoTDevice[]>([])
 const iotDeviceColumns = ref([
-  "name",
-  "serial_number",
-  "device_type",
-  "coverage",
-  "last_seen",
-  "battery_level",
-  "rssi"
+  'device_name',
+  'serial_number',
+  'device_type',
+  'coverage',
+  'last_seen',
+  'battery_level',
+  'rssi',
 ])
 
 const routerData = ref<RouterDevice[]>([])
 const routerColumns = ref([
-  "mac_address",
-  "name",
-  "ip_address",
-  "port",
-  "status",
-  "coverage",
-  "location"
+  'mac_address',
+  'name',
+  'ip_address',
+  'port',
+  'status',
+  'coverage',
+  'location',
 ])
 
 const showModal = ref(false)
@@ -110,16 +118,20 @@ const iotPagination = ref({
 })
 const iotLoading = ref(false)
 
-const modalTitle = computed(() =>
-  isAddingRouter.value ? "Add Router Device" : "Add IoT Device"
-)
+const modalTitle = computed(() => (isAddingRouter.value ? 'Add Router Device' : 'Add IoT Device'))
 
 const showAddModal = (isRouter: boolean) => {
   isAddingRouter.value = isRouter
   showModal.value = true
 }
 
-const searchTerm = ref("")
+const openAddModal = () => {
+  selectedDevice.value = null
+  isUpdate.value = false
+  showAddModal(false)
+}
+
+const searchTerm = ref('')
 
 const loadAIoTData = async (
   page = 1,
@@ -127,29 +139,14 @@ const loadAIoTData = async (
   search = searchTerm.value,
 ) => {
   try {
-    const params: Record<string, string | number> = {
-      page,
-      per_page: perPage,
-    }
+    const params: Record<string, string | number> = { page, per_page: perPage }
+    if (search && search.trim() !== '') params.search = search
 
-    if (search && search.trim() !== "") {
-      params.search = search
-    }
     iotLoading.value = true
-    const { data: payload } = await axios.get("http://localhost:8000/api/iot-devices", {
-      params
-    })
+    const { data: payload } = await axios.get('http://localhost:8000/api/iot-devices', { params })
 
     const devices = Array.isArray(payload.data) ? payload.data : []
-    iotDeviceData.value = devices.map((item: IoTDevice) => ({
-      name: item.device_name ?? item.name,
-      serial_number: item.serial_number,
-      device_type: item.device_type,
-      coverage: item.coverage,
-      last_seen: item.last_seen,
-      battery_level: item.battery_level,
-      rssi: item.rssi,
-    }))
+    iotDeviceData.value = devices
 
     iotPagination.value = {
       page: payload.current_page ?? page,
@@ -158,9 +155,25 @@ const loadAIoTData = async (
       total: payload.total ?? devices.length,
     }
   } catch (error) {
-    console.error("Error loading data:", error)
+    console.error('Error loading data:', error)
   } finally {
     iotLoading.value = false
+  }
+}
+
+const selectedDevice = ref<IoTDevice | null>(null)
+const isUpdate = ref(false)
+
+const loadDetailIoTData = async (device: IoTDevice) => {
+  try {
+    const { data } = await axios.get(`http://localhost:8000/api/iot-devices`, {
+      params: { serial_number: device.serial_number }
+    })
+    selectedDevice.value = data
+    isUpdate.value = true
+    showModal.value = true
+  } catch (error) {
+    console.error('Error loading IoT device details:', error)
   }
 }
 
@@ -173,6 +186,38 @@ const handleIotPerPageChange = (value: number) => {
   iotPagination.value.perPage = value
   loadAIoTData(1, value, searchTerm.value)
 }
+
+// // CRUD
+// const createIoTDevice = async (payload: IoTDevice) => {
+//   try {
+//     await axios.post('http://localhost:8000/api/iot-devices', payload)
+//     showModal.value = false
+//     loadAIoTData()
+//   } catch (error) {
+//     console.error('Error creating IoT device:', error)
+//   }
+// }
+
+// const updateIoTDevice = async (payload: IoTDevice) => {
+//   if (!payload.id) return
+//   try {
+//     await axios.put(`http://localhost:8000/api/iot-devices/${payload.id}`, payload)
+//     showModal.value = false
+//     loadAIoTData(iotPagination.value.page)
+//   } catch (error) {
+//     console.error('Error updating IoT device:', error)
+//   }
+// }
+
+// const deleteIoTDevice = async (id: number) => {
+//   try {
+//     await axios.delete(`http://localhost:8000/api/iot-devices/${id}`)
+//     showModal.value = false
+//     loadAIoTData(iotPagination.value.page)
+//   } catch (error) {
+//     console.error('Error deleting IoT device:', error)
+//   }
+// }
 
 onMounted(() => {
   loadAIoTData()
