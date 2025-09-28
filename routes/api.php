@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\IotDeviceController;
+use App\Http\Controllers\RouterController;
 
 Route::get('/iot-devices', [IotDeviceController::class, 'index']);
+Route::get('/routers', [RouterController::class, 'index']);
 

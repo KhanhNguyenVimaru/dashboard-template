@@ -127,7 +127,7 @@ const loadAIoTData = async (
   search = searchTerm.value,
 ) => {
   try {
-    const params: Record<string, any> = {
+    const params: Record<string, string | number> = {
       page,
       per_page: perPage,
     }

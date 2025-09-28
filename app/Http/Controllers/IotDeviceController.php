@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Http\Controllers;
 
@@ -23,7 +23,6 @@ class IotDeviceController extends Controller
 
         if($request->has('serial_number')){
             return IotDevice::where('serial_number', $request->query('serial_number'))->firstOrFail();
-
         }
 
         return IotDevice::paginate($perPage);
