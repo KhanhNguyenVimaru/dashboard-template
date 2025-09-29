@@ -50,6 +50,18 @@
         @close="showModal = false"
       />
     </transition>
+
+    <!-- Notifications -->
+    <div class="fixed top-6 right-6 space-y-3 z-[9999]">
+            <Notification
+              v-for="n in notifications"
+              :key="n.id"
+              :title="n.title"
+              :message="n.message"
+              :type="n.type"
+            />
+        />
+    </div>
   </div>
 </template>
 
@@ -58,6 +70,7 @@ import AppHeader from '../components/AppHeader.vue'
 import DataBox from '../components/DataBox.vue'
 import NewIoTDevicesModal from '../components/Modal/IoTDevicesModal.vue'
 import NewRouterModal from '../components/Modal/RouterModal.vue'
+import Notification from '../components/AppNotification.vue'
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 
@@ -137,6 +150,23 @@ const openAddModal = () => {
 
 const searchTerm = ref('')
 
+// Notifications state
+const notifications = ref<
+  { id: number; title: string; message: string; type: 'success' | 'error' | 'info' }[]
+>([])
+
+function showNotification(
+  title: string,
+  message: string,
+  type: 'success' | 'error' | 'info' = 'info',
+) {
+  const id = Date.now()
+  notifications.value.push({ id, title, message, type })
+  setTimeout(() => {
+    notifications.value = notifications.value.filter((n) => n.id !== id)
+  }, 4000)
+}
+
 const loadAIoTData = async (
   page = 1,
   perPage = iotPagination.value.perPage,
@@ -160,6 +190,7 @@ const loadAIoTData = async (
     }
   } catch (error) {
     console.error('Error loading data:', error)
+    showNotification('Error', 'Error loading data', 'error')
   } finally {
     iotLoading.value = false
   }
@@ -178,6 +209,7 @@ const loadDetailIoTData = async (device: IoTDevice) => {
     showModal.value = true
   } catch (error) {
     console.error('Error loading IoT device details:', error)
+    showNotification('Error', 'Error loading IoT device details:', 'error')
   }
 }
 
@@ -191,35 +223,16 @@ const handleIotPerPageChange = (value: number) => {
   loadAIoTData(1, value, searchTerm.value)
 }
 
-// // CRUD
+// // CRUD ví dụ có thể thêm noti success
 // const createIoTDevice = async (payload: IoTDevice) => {
 //   try {
 //     await axios.post('http://localhost:8000/api/iot-devices', payload)
 //     showModal.value = false
 //     loadAIoTData()
+//     showNotification('Thành công', 'Thiết bị IoT đã được tạo!', 'success')
 //   } catch (error) {
 //     console.error('Error creating IoT device:', error)
-//   }
-// }
-
-// const updateIoTDevice = async (payload: IoTDevice) => {
-//   if (!payload.id) return
-//   try {
-//     await axios.put(`http://localhost:8000/api/iot-devices/${payload.id}`, payload)
-//     showModal.value = false
-//     loadAIoTData(iotPagination.value.page)
-//   } catch (error) {
-//     console.error('Error updating IoT device:', error)
-//   }
-// }
-
-// const deleteIoTDevice = async (id: number) => {
-//   try {
-//     await axios.delete(`http://localhost:8000/api/iot-devices/${id}`)
-//     showModal.value = false
-//     loadAIoTData(iotPagination.value.page)
-//   } catch (error) {
-//     console.error('Error deleting IoT device:', error)
+//     showNotification('Lỗi', 'Không thể tạo thiết bị IoT!', 'error')
 //   }
 // }
 

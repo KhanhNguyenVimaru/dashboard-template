@@ -7,3 +7,6 @@ use App\Http\Controllers\RouterController;
 Route::get('/iot-devices', [IotDeviceController::class, 'index']);
 Route::get('/routers', [RouterController::class, 'index']);
 
+Route::post('/add-iot-device', [IotDeviceController::class, 'store']);
+Route::post('/add-router', [RouterController::class, 'store']);
+
