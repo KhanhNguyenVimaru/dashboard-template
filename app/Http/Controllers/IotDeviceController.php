@@ -6,6 +6,7 @@ use App\Models\IotDevice;
 use App\Http\Requests\StoreIotDeviceRequest;
 use App\Http\Requests\UpdateIotDeviceRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class IotDeviceController extends Controller
 {
@@ -22,7 +23,7 @@ class IotDeviceController extends Controller
         }
 
         if($request->has('serial_number')){
-            return IotDevice::where('serial_number', $request->query('serial_number'))->firstOrFail();
+            return IotDevice::with('devicesPosition')->where('serial_number', $request->query('serial_number'))->firstOrFail();
         }
 
         return IotDevice::paginate($perPage);
@@ -41,7 +42,8 @@ class IotDeviceController extends Controller
      */
     public function store(StoreIotDeviceRequest $request)
     {
-        //
+        $iotDevice = IotDevice::create($request->validated());
+        return response()->json($iotDevice, 201);
     }
 
     /**

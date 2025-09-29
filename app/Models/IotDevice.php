@@ -4,11 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Devices_position;
 
 class IotDevice extends Model
 {
     /** @use HasFactory<\Database\Factories\IotDeviceFactory> */
     use HasFactory;
+
+    public function devicesPosition(){
+        return $this->hasOne(Devices_position::class);
+    }
 
     protected $fillable = [
         'device_name',

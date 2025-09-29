@@ -208,6 +208,7 @@
 
 <script setup lang="ts">
 import { reactive, onMounted } from 'vue'
+import axios from 'axios'
 
 interface Props {
   show: boolean
@@ -242,6 +243,7 @@ const emit = defineEmits<{
   submit: [data: IoTDevice]
   update: [data: IoTDevice]
   delete: [id: number]
+  error: [message: string]
 }>()
 
 const formData = reactive<IoTDevice>({
@@ -288,11 +290,25 @@ const closeModal = () => {
   emit('close')
 }
 
-const handleSubmit = () => {
-  if (props.mode === 'add') {
-    emit('submit', { ...formData })
-  } else {
+const handleSubmit = async () => {
+  try {
+    if (props.mode === 'add') {
+      const { data } = await axios.post('http://localhost:8000/api/add-iot-device', formData)
+      resetForm()
+      emit('submit', data)
+      closeModal()
+      return
+    }
+
     emit('update', { ...formData })
+    closeModal()
+  } catch (error) {
+    console.error('Error submitting IoT device:', error)
+    const errorMessage =
+      axios.isAxiosError(error) && typeof error.response?.data?.message === 'string'
+        ? error.response.data.message
+        : 'Unable to add IoT device.'
+    emit('error', errorMessage)
   }
 }
 

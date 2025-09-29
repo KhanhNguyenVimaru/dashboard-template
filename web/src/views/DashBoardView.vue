@@ -38,6 +38,8 @@
         :mode="isUpdate ? 'update' : 'add'"
         :initialData="selectedDevice"
         @close="showModal = false"
+        @submit="handleDeviceCreated"
+        @error="handleModalError"
       />
     </transition>
 
@@ -75,10 +77,10 @@ import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 
 interface IoTDevice {
-  id: number
+  id?: number
   device_name: string
   device_type: string
-  serial_number: string
+  serial_number?: string
   ip_address?: string | null
   port?: number | null
   mac_address?: string | null
@@ -166,6 +168,16 @@ function showNotification(
 
 function dismissNotification(id: number) {
   notifications.value = notifications.value.filter((n) => n.id !== id)
+}
+
+function handleDeviceCreated(device: IoTDevice) {
+  showModal.value = false
+  showNotification('Success', `IoT device '${device.device_name}' added successfully.`, 'success')
+  loadAIoTData(iotPagination.value.page, iotPagination.value.perPage, searchTerm.value)
+}
+
+function handleModalError(message: string) {
+  showNotification('Error', message, 'error')
 }
 
 const loadAIoTData = async (
