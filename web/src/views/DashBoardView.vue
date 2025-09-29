@@ -39,8 +39,10 @@
         :initialData="selectedDevice"
         @close="showModal = false"
         @submit="handleDeviceCreated"
+        @update="handleDeviceUpdated"
         @error="handleModalError"
-      />
+        @delete="handleDeviceDeleted"
+        />
     </transition>
 
     <!-- Router Modal -->
@@ -173,6 +175,20 @@ function dismissNotification(id: number) {
 function handleDeviceCreated(device: IoTDevice) {
   showModal.value = false
   showNotification('Success', `IoT device '${device.device_name}' added successfully.`, 'success')
+  loadAIoTData(iotPagination.value.page, iotPagination.value.perPage, searchTerm.value)
+}
+
+function handleDeviceUpdated(device: IoTDevice) {
+  showModal.value = false
+  showNotification('Success', `IoT device '${device.device_name}' updated successfully.`, 'success')
+  selectedDevice.value = device
+  loadAIoTData(iotPagination.value.page, iotPagination.value.perPage, searchTerm.value)
+}
+
+function handleDeviceDeleted() {
+  showModal.value = false
+  showNotification('Success', 'IoT device deleted successfully.', 'success')
+  selectedDevice.value = null
   loadAIoTData(iotPagination.value.page, iotPagination.value.perPage, searchTerm.value)
 }
 

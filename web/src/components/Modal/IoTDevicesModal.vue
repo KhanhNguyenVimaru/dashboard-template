@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <transition name="slide-down">
     <div v-if="show" class="fixed inset-0 flex justify-center z-50 px-4 pt-12">
       <!-- Overlay -->
@@ -300,20 +300,46 @@ const handleSubmit = async () => {
       return
     }
 
-    emit('update', { ...formData })
+    const deviceId = formData.id
+
+    if (!deviceId) {
+      emit('error', 'Missing device identifier.')
+      return
+    }
+
+    const { data } = await axios.put(`http://localhost:8000/api/iot-devices/${deviceId}`, formData)
+    emit('update', data)
+    resetForm()
     closeModal()
   } catch (error) {
-    console.error('Error submitting IoT device:', error)
     const errorMessage =
       axios.isAxiosError(error) && typeof error.response?.data?.message === 'string'
         ? error.response.data.message
-        : 'Unable to add IoT device.'
+        : 'Unable to save IoT device.'
     emit('error', errorMessage)
   }
 }
 
-const handleDelete = () => {
-  if (formData.id) emit('delete', formData.id)
+const handleDelete = async () => {
+  const deviceId = formData.id
+
+  if (!deviceId) {
+    emit('error', 'Missing device identifier.')
+    return
+  }
+
+  try {
+    await axios.delete(`http://localhost:8000/api/iot-devices/${deviceId}`)
+    emit('delete', deviceId)
+    resetForm()
+    closeModal()
+  } catch (error) {
+    const errorMessage =
+      axios.isAxiosError(error) && typeof error.response?.data?.message === 'string'
+        ? error.response.data.message
+        : 'Unable to delete IoT device.'
+    emit('error', errorMessage)
+  }
 }
 
 onMounted(() => {
@@ -363,3 +389,5 @@ button{
   cursor: pointer;
 }
 </style>
+
+
