@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <AppHeader />
   <div class="flex flex-col gap-4 p-4">
     <div class="flex gap-5">
@@ -53,14 +53,14 @@
 
     <!-- Notifications -->
     <div class="fixed top-6 right-6 space-y-3 z-[9999]">
-            <Notification
-              v-for="n in notifications"
-              :key="n.id"
-              :title="n.title"
-              :message="n.message"
-              :type="n.type"
-            />
-        />
+      <Notification
+        v-for="n in notifications"
+        :key="n.id"
+        :title="n.title"
+        :message="n.message"
+        :type="n.type"
+        @dismiss="dismissNotification(n.id)"
+      />
     </div>
   </div>
 </template>
@@ -162,9 +162,10 @@ function showNotification(
 ) {
   const id = Date.now()
   notifications.value.push({ id, title, message, type })
-  setTimeout(() => {
-    notifications.value = notifications.value.filter((n) => n.id !== id)
-  }, 4000)
+}
+
+function dismissNotification(id: number) {
+  notifications.value = notifications.value.filter((n) => n.id !== id)
 }
 
 const loadAIoTData = async (
@@ -222,19 +223,6 @@ const handleIotPerPageChange = (value: number) => {
   iotPagination.value.perPage = value
   loadAIoTData(1, value, searchTerm.value)
 }
-
-// // CRUD ví dụ có thể thêm noti success
-// const createIoTDevice = async (payload: IoTDevice) => {
-//   try {
-//     await axios.post('http://localhost:8000/api/iot-devices', payload)
-//     showModal.value = false
-//     loadAIoTData()
-//     showNotification('Thành công', 'Thiết bị IoT đã được tạo!', 'success')
-//   } catch (error) {
-//     console.error('Error creating IoT device:', error)
-//     showNotification('Lỗi', 'Không thể tạo thiết bị IoT!', 'error')
-//   }
-// }
 
 onMounted(() => {
   loadAIoTData()
