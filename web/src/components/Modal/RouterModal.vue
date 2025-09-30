@@ -70,49 +70,6 @@
                     required
                   />
                 </div>
-
-                <div>
-                  <label class="block text-xs font-medium text-gray-700 mb-1">Location</label>
-                  <input
-                    v-model="formData.location"
-                    type="text"
-                    class="w-full px-2 py-1 border border-gray-300 rounded-lg text-xs"
-                    placeholder="Enter location"
-                  />
-                </div>
-
-                <div class="space-y-3">
-                  <!-- Location (X, Y) -->
-                  <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Location</label>
-                    <div class="flex gap-2">
-                      <input
-                        type="number"
-                        class="w-1/2 px-2 py-1 border border-gray-300 rounded-lg text-xs"
-                        placeholder="X"
-                      />
-                      <input
-                        type="number"
-                        class="w-1/2 px-2 py-1 border border-gray-300 rounded-lg text-xs"
-                        placeholder="Y"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Column 2 -->
-              <div class="space-y-3">
-                <div>
-                  <label class="block text-xs font-medium text-gray-700 mb-1">Model</label>
-                  <input
-                    v-model="formData.model"
-                    type="text"
-                    class="w-full px-2 py-1 border border-gray-300 rounded-lg text-xs"
-                    placeholder="Enter model"
-                  />
-                </div>
-
                 <div>
                   <label class="block text-xs font-medium text-gray-700 mb-1">Manufacturer</label>
                   <input
@@ -132,6 +89,20 @@
                     type="text"
                     class="w-full px-2 py-1 border border-gray-300 rounded-lg text-xs"
                     placeholder="Enter firmware version"
+                  />
+                </div>
+
+              </div>
+
+              <!-- Column 2 -->
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-xs font-medium text-gray-700 mb-1">Model</label>
+                  <input
+                    v-model="formData.model"
+                    type="text"
+                    class="w-full px-2 py-1 border border-gray-300 rounded-lg text-xs"
+                    placeholder="Enter model"
                   />
                 </div>
 

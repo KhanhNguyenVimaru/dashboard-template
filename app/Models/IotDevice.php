@@ -33,6 +33,10 @@ class IotDevice extends Model
         'battery_level',
         'rssi',
     ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
     /**
      * Scope a query to search IoT devices by keyword across multiple fields.
      */
@@ -62,3 +66,4 @@ class IotDevice extends Model
         });
     }
 }
+
