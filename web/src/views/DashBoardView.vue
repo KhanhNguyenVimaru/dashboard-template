@@ -10,7 +10,7 @@
           :loading="iotLoading"
           title="IoT Devices"
           @add-click="openAddModal"
-          @change:page="loadAIoTData"
+          @change:page="loadIoTData"
           @change:perPage="handleIotPerPageChange"
           @change:search="handleIotSearch"
           @detail-click="(item) => loadDetailIoTData(item as any)"
@@ -32,7 +32,7 @@
 
     <!-- IoT Modal -->
     <transition name="slide-down">
-      <NewIoTDevicesModal
+      <IoTDevicesModal
         v-if="showModal && !isAddingRouter"
         :show="showModal"
         :mode="isUpdate ? 'update' : 'add'"
@@ -47,7 +47,7 @@
 
     <!-- Router Modal -->
     <transition name="slide-down">
-      <NewRouterModal
+      <RouterModal
         v-if="showModal && isAddingRouter"
         :show="showModal"
         :title="modalTitle"
@@ -72,8 +72,8 @@
 <script setup lang="ts">
 import AppHeader from '../components/AppHeader.vue'
 import DataBox from '../components/DataBox.vue'
-import NewIoTDevicesModal from '../components/Modal/IoTDevicesModal.vue'
-import NewRouterModal from '../components/Modal/RouterModal.vue'
+import IoTDevicesModal from '../components/Modal/IoTDevicesModal.vue'
+import RouterModal from '../components/Modal/RouterModal.vue'
 import Notification from '../components/AppNotification.vue'
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
@@ -175,31 +175,29 @@ function dismissNotification(id: number) {
 function handleDeviceCreated(device: IoTDevice) {
   showModal.value = false
   showNotification('Success', `IoT device '${device.device_name}' added successfully.`, 'success')
-  loadAIoTData(iotPagination.value.page, iotPagination.value.perPage, searchTerm.value)
+  loadIoTData(iotPagination.value.page, iotPagination.value.perPage, searchTerm.value)
 }
 
 function handleDeviceUpdated(device: IoTDevice) {
   showModal.value = false
   showNotification('Success', `IoT device '${device.device_name}' updated successfully.`, 'success')
   selectedDevice.value = device
-  loadAIoTData(iotPagination.value.page, iotPagination.value.perPage, searchTerm.value)
+  loadIoTData(iotPagination.value.page, iotPagination.value.perPage, searchTerm.value)
 }
 
 function handleDeviceDeleted() {
   showModal.value = false
   showNotification('Success', 'IoT device deleted successfully.', 'success')
   selectedDevice.value = null
-  loadAIoTData(iotPagination.value.page, iotPagination.value.perPage, searchTerm.value)
+  loadIoTData(iotPagination.value.page, iotPagination.value.perPage, searchTerm.value)
 }
 
 function handleModalError(message: string) {
   showNotification('Error', message, 'error')
 }
 
-const loadAIoTData = async (
-  page = 1,
-  perPage = iotPagination.value.perPage,
-  search = searchTerm.value,
+// load toàn bộ dữ liệu cuả IoT devices
+const loadIoTData = async ( page = 1, perPage = iotPagination.value.perPage, search = searchTerm.value,
 ) => {
   try {
     const params: Record<string, string | number> = { page, per_page: perPage }
@@ -228,6 +226,7 @@ const loadAIoTData = async (
 const selectedDevice = ref<IoTDevice | null>(null)
 const isUpdate = ref(false)
 
+// hàm load dữ liệu của từng thiết bị
 const loadDetailIoTData = async (device: IoTDevice) => {
   try {
     const { data } = await axios.get(`http://localhost:8000/api/iot-devices`, {
@@ -242,17 +241,18 @@ const loadDetailIoTData = async (device: IoTDevice) => {
   }
 }
 
+// hàm tìm kiếm và phân trang thiết bị được tìm
 const handleIotSearch = (value: string) => {
   searchTerm.value = value
-  loadAIoTData(1, iotPagination.value.perPage, searchTerm.value)
+  loadIoTData(1, iotPagination.value.perPage, searchTerm.value)
 }
 
 const handleIotPerPageChange = (value: number) => {
   iotPagination.value.perPage = value
-  loadAIoTData(1, value, searchTerm.value)
+  loadIoTData(1, value, searchTerm.value)
 }
 
 onMounted(() => {
-  loadAIoTData()
+  loadIoTData()
 })
 </script>
