@@ -16,6 +16,7 @@ class IotDeviceController extends Controller
     {
         $perPage = $request->integer('per_page', 5);
 
+        // nếu như api gửi có search
         if ($request->has('search')) {
             $keyword = $request->query('search');
             return IotDevice::search($keyword)->paginate($perPage);
@@ -41,7 +42,7 @@ class IotDeviceController extends Controller
      */
     public function store(StoreIotDeviceRequest $request)
     {
-        $iotDevice = IotDevice::create($request->validated());
+        $iotDevice = IotDevice::create($request->validated()); // validate là dữ liệu đã được xác thực
         return response()->json($iotDevice, 201);
     }
 

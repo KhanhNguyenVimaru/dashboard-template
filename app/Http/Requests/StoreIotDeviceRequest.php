@@ -11,6 +11,7 @@ class StoreIotDeviceRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        // set tạm authorize là true để cho phép tất cả các yêu cầu
         return true;
     }
 
@@ -21,6 +22,7 @@ class StoreIotDeviceRequest extends FormRequest
      */
     public function rules(): array
     {
+        // dữ liệu được lọc ở đây
         return [
             'device_name' => 'required|string|max:255',
             'device_type' => 'required|in:sensor,plc,cnc,rfid,robot,hmi,other',

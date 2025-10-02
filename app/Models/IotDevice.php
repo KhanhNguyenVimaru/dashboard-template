@@ -44,7 +44,7 @@ class IotDevice extends Model
     /**
      * Scope a query to search IoT devices by keyword across fillable fields.
      */
-    public function scopeSearch($query, string $keyword)
+    public function scopeSearch($query, string $keyword) //scope có thiểu hiểu là giới hạn lại
     {
         return $query->where(function ($q) use ($keyword) {
             $q->where('device_name', 'like', "%$keyword%")
