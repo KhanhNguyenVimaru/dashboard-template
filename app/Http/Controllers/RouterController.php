@@ -42,7 +42,8 @@ class RouterController extends Controller
      */
     public function store(StorerouterRequest $request)
     {
-        //
+        $router = router::create($request->validated()); // validate là dữ liệu đã được xác thực
+        return response() ->json($router, 201);
     }
 
     /**
@@ -66,7 +67,8 @@ class RouterController extends Controller
      */
     public function update(UpdaterouterRequest $request, router $router)
     {
-        //
+        $router->update($request->validated());
+        return response()->json($router->fresh());
     }
 
     /**
@@ -74,6 +76,7 @@ class RouterController extends Controller
      */
     public function destroy(router $router)
     {
-        //
+        $router->delete();
+       return response()->noContent(); 
     }
 }

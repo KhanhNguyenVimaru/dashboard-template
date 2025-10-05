@@ -11,7 +11,7 @@ class IotDevice extends Model
     /** @use HasFactory<\Database\Factories\IotDeviceFactory> */
     use HasFactory;
 
-    public function devicesPosition(){
+    public function devicesPosition() {
         return $this->hasOne(Devices_position::class);
     }
 
