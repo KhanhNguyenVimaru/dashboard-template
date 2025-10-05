@@ -1,4 +1,4 @@
-<template>
+<template>  
   <AppHeader />
   <div class="flex flex-col gap-4 p-4">
     <div class="flex gap-5">
@@ -22,6 +22,12 @@
           :columns="routerColumns"
           title="Router Devices"
           @add-click="showAddModal(true)"
+          @change:page="loadRouterData"
+          @change:perPage="handleRouterPerPageChange"
+          @change:search="handleRouterSearch"
+          @detail-click="(item) => loadDetailRouterData(item as any)"
+          :pagination="routerPagination"
+          :loading="routerLoading"
         />
       </div>
     </div>
@@ -52,6 +58,10 @@
         :show="showModal"
         :title="modalTitle"
         @close="showModal = false"
+        @create="handleRouterCreate"
+        @update="handleRouterUpdated"
+        @error="handleRouterError"
+        @delete="handleRouterDeleted"
       />
     </transition>
 
@@ -77,6 +87,7 @@ import RouterModal from '../components/Modal/RouterModal.vue'
 import Notification from '../components/AppNotification.vue'
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
+import router from '@/router'
 
 interface IoTDevice {
   id?: number
@@ -128,8 +139,17 @@ const routerColumns = ref([
   'location',
 ])
 
+
 const showModal = ref(false)
 const isAddingRouter = ref(false)
+
+const routerPagination = ref({
+  page: 1,
+  perPage: 5,
+  lastPage: 1,
+  total: 0,
+})
+const routerLoading = ref(false)
 
 const iotPagination = ref({
   page: 1,
@@ -254,5 +274,79 @@ const handleIotPerPageChange = (value: number) => {
 
 onMounted(() => {
   loadIoTData()
+})
+// load dữ liệu của router devices
+function handleRouterCreate(devices: RouterDevice) {
+  showModal.value = false
+  showNotification('Success', `Router device '${devices.name}' added successfully.`, 'success');
+  loadRouterData(routerPagination.value.page, routerPagination.value.perPage);
+}
+
+function handleRouterUpdated(devices: RouterDevice) {
+  showModal.value = false
+  showNotification('Success', `Router device '${devices.name}' updated successfully.`, 'success');
+  loadRouterData(routerPagination.value.page, routerPagination.value.perPage);
+}
+
+function handleRouterDeleted() {
+  showModal.value = false
+  showNotification('Success', 'Router device deleted successfully.', 'success');
+  selectedDevice.value = null;
+  loadRouterData(routerPagination.value.page, routerPagination.value.perPage);
+}
+function handleRouterError(message: string) {
+  showNotification('Error', message, 'error');
+}
+// hàm load dữ liệu của router devices
+const loadRouterData = async( page = 1, perPage = routerPagination.value.perPage
+) => {
+  try {
+    const params: Record<string, string | number> = { page, per_page: perPage }
+
+    const { data: payload } = await axios.get('http://localhost:8000/api/routers', { params })
+
+    const devices = Array.isArray(payload.data) ? payload.data : []
+    routerData.value = devices
+
+    routerPagination.value = {
+      page: payload.current_page ?? page,
+      perPage: payload.per_page ?? perPage,
+      lastPage: payload.last_page ?? 1,
+      total: payload.total ?? devices.length,
+    }
+  } catch (error) {
+    console.error('Error loading router data:', error)
+    showNotification('Error', 'Error loading router data', 'error')
+  } finally{
+    routerLoading.value = false;
+  }
+}
+
+const selectedRouter = ref<RouterDevice | null>(null)
+const isRouterUpdate = ref(false)
+// hàm load dữ liệu của từng thiết bị
+const loadDetailRouterData = async (device: RouterDevice) => {
+  try {
+    const { data } = await axios.get(`http://localhost:8000/api/routers`, {
+      params: { deviceId: device.deviceId },
+    })
+    selectedRouter.value = data
+    isRouterUpdate.value = true
+    showModal.value = true
+  } catch (error) {
+    console.error('Error loading Router device details:', error)
+    showNotification('Error', 'Error loading Router device details:', 'error')
+  }
+}
+const handleRouterSearch = (value: string) => {
+  searchTerm.value = value
+  loadRouterData(1, routerPagination.value.perPage)
+}
+const handleRouterPerPageChange = (value: number) => {
+  routerPagination.value.perPage = value
+  loadRouterData(1, value)
+}
+onMounted(() => {
+  loadRouterData()
 })
 </script>

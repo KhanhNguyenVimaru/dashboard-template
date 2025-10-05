@@ -11,7 +11,7 @@ class StorerouterRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,17 @@ class StorerouterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+        'mac_address'       => 'required|string|size:17|unique:devices,mac_address',
+        'name'              => 'required|string|max:255',
+        'port'              => 'nullable|integer|min:0|max:65535',
+        'ip_address'        => 'required|ip|unique:devices,ip_address',
+        'location'          => 'nullable|string|max:255',
+        'model'             => 'nullable|string|max:255',
+        'manufacturer'      => 'nullable|string|max:255',
+        'firmware_version'  => 'nullable|string|max:255',
+        'status'            => 'required|in:online,offline',
+        'bandwidth'         => 'nullable|integer|min:0',
+        'coverage'          => 'nullable|numeric|min:0',
         ];
     }
 }

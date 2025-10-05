@@ -11,4 +11,5 @@ Route::delete('/iot-devices/{iotDevice}', [IotDeviceController::class, 'destroy'
 
 Route::get('/routers', [RouterController::class, 'index']);
 Route::post('/add-router', [RouterController::class, 'store']);
-
+Route::put('/routers/{router}', [RouterController::class, 'update']);
+Route::delete('/routers/{router}', [RouterController::class, 'destroy']);
