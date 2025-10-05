@@ -11,6 +11,11 @@ class Router extends Model
     /** @use HasFactory<\Database\Factories\RouterFactory> */
     use HasFactory;
 
+    public function getRouteKeyName(): string
+    {
+        return 'mac_address';
+    }
+
     /**
      * Lấy môi trường chứa router này
      */
@@ -60,3 +65,8 @@ class Router extends Model
         });
     }
 }
+
+
+
+
+
