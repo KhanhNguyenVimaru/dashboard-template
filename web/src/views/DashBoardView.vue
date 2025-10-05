@@ -1,4 +1,4 @@
-<template>  
+<template>
   <AppHeader />
   <div class="flex flex-col gap-4 p-4">
     <div class="flex gap-5">
@@ -56,8 +56,10 @@
       <RouterModal
         v-if="showModal && isAddingRouter"
         :show="showModal"
+        :mode="isRouterUpdate ? 'update' : 'add'"
         :title="modalTitle"
-        @close="showModal = false"
+        :initial-data="selectedRouter"
+        @close="closeRouterModal"
         @create="handleRouterCreate"
         @update="handleRouterUpdated"
         @error="handleRouterError"
@@ -87,7 +89,24 @@ import RouterModal from '../components/Modal/RouterModal.vue'
 import Notification from '../components/AppNotification.vue'
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
-import router from '@/router'
+type RouterStatus = 'online' | 'offline'
+
+interface RouterRecord {
+  id?: number | null
+  name: string
+  mac_address: string
+  ip_address: string
+  port?: number | null
+  location?: string | null
+  model?: string | null
+  manufacturer?: string | null
+  firmware_version?: string | null
+  status: RouterStatus
+  bandwidth?: number | null
+  coverage?: number | null
+  created_at?: string | null
+  updated_at?: string | null
+}
 
 interface IoTDevice {
   id?: number
@@ -108,14 +127,7 @@ interface IoTDevice {
   rssi?: number | null
 }
 
-interface RouterDevice {
-  mac_address: string
-  name: string
-  ip_address: string
-  status: string
-  coverage: number
-  deviceId: string
-}
+type RouterDevice = RouterRecord
 
 const iotDeviceData = ref<IoTDevice[]>([])
 const iotDeviceColumns = ref([
@@ -129,6 +141,8 @@ const iotDeviceColumns = ref([
 ])
 
 const routerData = ref<RouterDevice[]>([])
+const selectedRouter = ref<RouterDevice | null>(null)
+const isRouterUpdate = ref(false)
 const routerColumns = ref([
   'mac_address',
   'name',
@@ -142,6 +156,8 @@ const routerColumns = ref([
 
 const showModal = ref(false)
 const isAddingRouter = ref(false)
+const selectedDevice = ref<IoTDevice | null>(null)
+const isUpdate = ref(false)
 
 const routerPagination = ref({
   page: 1,
@@ -159,12 +175,28 @@ const iotPagination = ref({
 })
 const iotLoading = ref(false)
 
-const modalTitle = computed(() => (isAddingRouter.value ? 'Add Router Device' : 'Add IoT Device'))
-
 const showAddModal = (isRouter: boolean) => {
   isAddingRouter.value = isRouter
+  if (isRouter) {
+    isRouterUpdate.value = false
+    selectedRouter.value = null
+  }
   showModal.value = true
 }
+
+const closeRouterModal = () => {
+  showModal.value = false
+  isAddingRouter.value = false
+  isRouterUpdate.value = false
+  selectedRouter.value = null
+}
+
+const modalTitle = computed(() => {
+  if (isAddingRouter.value) {
+    return isRouterUpdate.value ? 'Router Device' : 'Add Router Device'
+  }
+  return isUpdate.value ? 'IoT Device Data' : 'Add IoT Device'
+})
 
 const openAddModal = () => {
   selectedDevice.value = null
@@ -175,45 +207,54 @@ const openAddModal = () => {
 const searchTerm = ref('')
 
 // Notifications state
-const notifications = ref<
-  { id: number; title: string; message: string; type: 'success' | 'error' | 'info' }[]
->([])
-
-function showNotification(
-  title: string,
-  message: string,
-  type: 'success' | 'error' | 'info' = 'info',
-) {
-  const id = Date.now()
-  notifications.value.push({ id, title, message, type })
+type NotificationType = 'success' | 'error' | 'info'
+interface NotificationEntry {
+  id: number
+  title: string
+  message: string
+  type: NotificationType
 }
 
-function dismissNotification(id: number) {
+const notifications = ref<NotificationEntry[]>([])
+
+const pushNotification = (type: NotificationType, message: string, title?: string) => {
+  const id = Date.now()
+  notifications.value.push({
+    id,
+    title: title ?? (type === 'error' ? 'Error' : type === 'success' ? 'Success' : 'Info'),
+    message,
+    type,
+  })
+}
+
+const notifySuccess = (message: string, title?: string) => pushNotification('success', message, title)
+const notifyError = (message: string, title?: string) => pushNotification('error', message, title)
+
+const dismissNotification = (id: number) => {
   notifications.value = notifications.value.filter((n) => n.id !== id)
 }
-
 function handleDeviceCreated(device: IoTDevice) {
   showModal.value = false
-  showNotification('Success', `IoT device '${device.device_name}' added successfully.`, 'success')
+  notifySuccess(`IoT device '${device.device_name}' added successfully.`)
   loadIoTData(iotPagination.value.page, iotPagination.value.perPage, searchTerm.value)
 }
 
 function handleDeviceUpdated(device: IoTDevice) {
   showModal.value = false
-  showNotification('Success', `IoT device '${device.device_name}' updated successfully.`, 'success')
+  notifySuccess(`IoT device '${device.device_name}' updated successfully.`)
   selectedDevice.value = device
   loadIoTData(iotPagination.value.page, iotPagination.value.perPage, searchTerm.value)
 }
 
 function handleDeviceDeleted() {
   showModal.value = false
-  showNotification('Success', 'IoT device deleted successfully.', 'success')
+  notifySuccess('IoT device deleted successfully.')
   selectedDevice.value = null
   loadIoTData(iotPagination.value.page, iotPagination.value.perPage, searchTerm.value)
 }
 
 function handleModalError(message: string) {
-  showNotification('Error', message, 'error')
+  notifyError(message)
 }
 
 // load toàn bộ dữ liệu cuả IoT devices
@@ -237,14 +278,11 @@ const loadIoTData = async ( page = 1, perPage = iotPagination.value.perPage, sea
     }
   } catch (error) {
     console.error('Error loading data:', error)
-    showNotification('Error', 'Error loading data', 'error')
+    notifyError('Error loading data')
   } finally {
     iotLoading.value = false
   }
 }
-
-const selectedDevice = ref<IoTDevice | null>(null)
-const isUpdate = ref(false)
 
 // hàm load dữ liệu của từng thiết bị
 const loadDetailIoTData = async (device: IoTDevice) => {
@@ -256,8 +294,8 @@ const loadDetailIoTData = async (device: IoTDevice) => {
     isUpdate.value = true
     showModal.value = true
   } catch (error) {
-    console.error('Error loading IoT device details:', error)
-    showNotification('Error', 'Error loading IoT device details:', 'error')
+    console.error('Error loading IoT device details.', error)
+    notifyError('Error loading IoT device details.')
   }
 }
 
@@ -276,32 +314,37 @@ onMounted(() => {
   loadIoTData()
 })
 // load dữ liệu của router devices
-function handleRouterCreate(devices: RouterDevice) {
-  showModal.value = false
-  showNotification('Success', `Router device '${devices.name}' added successfully.`, 'success');
-  loadRouterData(routerPagination.value.page, routerPagination.value.perPage);
+function handleRouterCreate(router: RouterDevice) {
+  closeRouterModal()
+  notifySuccess(`Router device '${router.name}' added successfully.`)
+  loadRouterData(routerPagination.value.page, routerPagination.value.perPage, searchTerm.value)
 }
 
-function handleRouterUpdated(devices: RouterDevice) {
-  showModal.value = false
-  showNotification('Success', `Router device '${devices.name}' updated successfully.`, 'success');
-  loadRouterData(routerPagination.value.page, routerPagination.value.perPage);
+function handleRouterUpdated(router: RouterDevice) {
+  closeRouterModal()
+  notifySuccess(`Router device '${router.name}' updated successfully.`)
+  loadRouterData(routerPagination.value.page, routerPagination.value.perPage, searchTerm.value)
 }
 
-function handleRouterDeleted() {
-  showModal.value = false
-  showNotification('Success', 'Router device deleted successfully.', 'success');
-  selectedDevice.value = null;
-  loadRouterData(routerPagination.value.page, routerPagination.value.perPage);
+function handleRouterDeleted(mac?: string) {
+  closeRouterModal()
+  notifySuccess('Router device deleted successfully.')
+  selectedRouter.value = null
+  if (mac) {
+    routerData.value = routerData.value.filter((router) => router.mac_address !== mac)
+  }
+  loadRouterData(routerPagination.value.page, routerPagination.value.perPage, searchTerm.value)
 }
 function handleRouterError(message: string) {
-  showNotification('Error', message, 'error');
+  notifyError(message)
 }
 // hàm load dữ liệu của router devices
-const loadRouterData = async( page = 1, perPage = routerPagination.value.perPage
+const loadRouterData = async( page = 1, perPage = routerPagination.value.perPage, search = searchTerm.value
 ) => {
   try {
+    routerLoading.value = true
     const params: Record<string, string | number> = { page, per_page: perPage }
+    if (search && search.trim() !== '') params.search = search
 
     const { data: payload } = await axios.get('http://localhost:8000/api/routers', { params })
 
@@ -316,37 +359,37 @@ const loadRouterData = async( page = 1, perPage = routerPagination.value.perPage
     }
   } catch (error) {
     console.error('Error loading router data:', error)
-    showNotification('Error', 'Error loading router data', 'error')
+    notifyError('Error loading router data')
   } finally{
     routerLoading.value = false;
   }
 }
-
-const selectedRouter = ref<RouterDevice | null>(null)
-const isRouterUpdate = ref(false)
 // hàm load dữ liệu của từng thiết bị
 const loadDetailRouterData = async (device: RouterDevice) => {
   try {
     const { data } = await axios.get(`http://localhost:8000/api/routers`, {
-      params: { deviceId: device.deviceId },
+      params: { mac_address: device.mac_address },
     })
     selectedRouter.value = data
     isRouterUpdate.value = true
+    isAddingRouter.value = true
     showModal.value = true
   } catch (error) {
-    console.error('Error loading Router device details:', error)
-    showNotification('Error', 'Error loading Router device details:', 'error')
+    console.error('Error loading router device details.', error)
+    notifyError('Error loading router device details.')
   }
 }
 const handleRouterSearch = (value: string) => {
   searchTerm.value = value
-  loadRouterData(1, routerPagination.value.perPage)
+  loadRouterData(1, routerPagination.value.perPage, searchTerm.value)
 }
 const handleRouterPerPageChange = (value: number) => {
   routerPagination.value.perPage = value
-  loadRouterData(1, value)
+  loadRouterData(1, value, searchTerm.value)
 }
 onMounted(() => {
   loadRouterData()
 })
 </script>
+
+

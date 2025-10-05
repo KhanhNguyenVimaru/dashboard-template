@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\router;
+use App\Models\Router;
 use App\Http\Requests\StorerouterRequest;
 use App\Http\Requests\UpdaterouterRequest;
 use Illuminate\Http\Request;
@@ -18,15 +18,15 @@ class RouterController extends Controller
 
         if ($request->has('search')) {
             $keyword = $request->query('search');
-            return router::search($keyword)->paginate($perPage);
+            return Router::search($keyword)->paginate($perPage);
         }
 
         if($request->has('mac_address')){
-            return router::where('mac_address', $request->query('mac_address'))->firstOrFail();
+            return Router::where('mac_address', $request->query('mac_address'))->firstOrFail();
 
         }
 
-        return router::paginate($perPage);
+        return Router::paginate($perPage);
     }
 
     /**
@@ -42,14 +42,14 @@ class RouterController extends Controller
      */
     public function store(StorerouterRequest $request)
     {
-        $router = router::create($request->validated()); // validate là dữ liệu đã được xác thực
+        $router = Router::create($request->validated()); // validate là dữ liệu đã được xác thực
         return response() ->json($router, 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(router $router)
+    public function show(Router $router)
     {
         //
     }
@@ -57,7 +57,7 @@ class RouterController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(router $router)
+    public function edit(Router $router)
     {
         //
     }
@@ -65,7 +65,7 @@ class RouterController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdaterouterRequest $request, router $router)
+    public function update(UpdaterouterRequest $request, Router $router)
     {
         $router->update($request->validated());
         return response()->json($router->fresh());
@@ -74,9 +74,14 @@ class RouterController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(router $router)
+    public function destroy(Router $router)
     {
         $router->delete();
        return response()->noContent(); 
     }
 }
+
+
+
+
+

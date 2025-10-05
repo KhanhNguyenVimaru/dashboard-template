@@ -16,7 +16,6 @@ class IotDeviceController extends Controller
     {
         $perPage = $request->integer('per_page', 5);
 
-        // nếu như api gửi có search
         if ($request->has('search')) {
             $keyword = $request->query('search');
             return IotDevice::search($keyword)->paginate($perPage);
