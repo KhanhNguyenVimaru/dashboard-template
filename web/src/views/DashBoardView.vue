@@ -1,6 +1,9 @@
 <template>
   <AppHeader />
   <div class="flex flex-col gap-4 p-4">
+    <!-- Temperature chart spanning full width above the two DataBox columns -->
+    <TemperatureLineChart />
+
     <div class="flex gap-5">
       <div class="flex-1">
         <DataBox
@@ -87,6 +90,7 @@ import DataBox from '../components/DataBox.vue'
 import IoTDevicesModal from '../components/Modal/IoTDevicesModal.vue'
 import RouterModal from '../components/Modal/RouterModal.vue'
 import Notification from '../components/AppNotification.vue'
+import TemperatureLineChart from '../components/TemperatureLineChart.vue'
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 type RouterStatus = 'online' | 'offline'
@@ -391,5 +395,4 @@ onMounted(() => {
   loadRouterData()
 })
 </script>
-
 
