@@ -1,6 +1,8 @@
 SET UP BACKEND
 - composer install
 
+- create .env file to setup environment
+
 - php artisan key:generate
 
 - php artisan migrate
@@ -8,13 +10,15 @@ SET UP BACKEND
 - php artisan db:seed
 
 SET UP FRONT END
+- cd web
+
 - npm install
 
 RUN WEBSITE
-// backend
+- open new terminal
+
 - php artisan serve
 
-//frontend
 - cd web (cd to vue folder)
 
 - npm run dev

@@ -34,11 +34,6 @@
         />
       </div>
     </div>
-
-    <div class="h-screen bg-gray-100 flex items-center justify-center text-sm text-gray-500">
-      Network devices area
-    </div>
-
     <!-- IoT Modal -->
     <transition name="slide-down">
       <IoTDevicesModal
@@ -82,10 +77,13 @@
       />
     </div>
   </div>
+
+  <AppFooter />
 </template>
 
 <script setup lang="ts">
 import AppHeader from '../components/AppHeader.vue'
+import AppFooter from '../components/AppFooter.vue'
 import DataBox from '../components/DataBox.vue'
 import IoTDevicesModal from '../components/Modal/IoTDevicesModal.vue'
 import RouterModal from '../components/Modal/RouterModal.vue'
@@ -395,4 +393,3 @@ onMounted(() => {
   loadRouterData()
 })
 </script>
-

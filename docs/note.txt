@@ -1,2 +1,0 @@
-- tách các trường trạng thái như rssi, battery_level ra status riêng
-- sau này sửa authorize ở StoreIotDeviceRequest.php và UpdateIotDeviceRequest.php về false (lhi tạo passport)
